@@ -1,0 +1,6 @@
+/dist/
+/.build/
+/.codex/
+__pycache__/
+*.user
+*.suo
