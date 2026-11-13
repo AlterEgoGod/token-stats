@@ -15,7 +15,7 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyTitle("TokenStats")]
 [assembly: System.Reflection.AssemblyProduct("TokenStats")]
 [assembly: System.Reflection.AssemblyDescription("TokenStats — статистика лимитов Codex")]
-[assembly: System.Reflection.AssemblyVersion("1.0.1.0")]
+[assembly: System.Reflection.AssemblyVersion("1.0.2.0")]
 
 namespace TokenStats
 {
