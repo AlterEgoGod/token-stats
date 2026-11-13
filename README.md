@@ -6,8 +6,8 @@
 
 Нужны Windows 10/11, .NET Framework 4.8 и установленный Codex с выполненным входом через ChatGPT.
 
-- **TokenStats-Setup.exe** — установка с ярлыками в меню «Пуск» и на рабочем столе. Удаление — через «Установленные приложения» Windows.
-- **TokenStats.exe** — запуск без установки.
+- [**TokenStats-Setup.exe**](https://github.com/AlterEgoGod/token-stats/releases/latest/download/TokenStats-Setup.exe) — установка с ярлыками в меню «Пуск» и на рабочем столе. Удаление — через «Установленные приложения» Windows.
+- [**TokenStats.exe**](https://github.com/AlterEgoGod/token-stats/releases/latest/download/TokenStats.exe) — запуск без установки.
 
 Перед установкой или заменой файла закройте TokenStats через меню трея. Если требуется вход, нажмите «Войти через ChatGPT», затем обновите лимиты.
 
