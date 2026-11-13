@@ -23,8 +23,7 @@ namespace TokenStats
         public event Action RefreshRequested;
         public event Action LoginRequested;
         bool expanded;
-        int pressedAction, hoverAction, focusAction = 1;
-        bool keyboardFocus;
+        int pressedAction, hoverAction;
         Point compactLocation, expandedOrigin;
         Quota primaryQuota, secondaryQuota;
         string detailsError;
@@ -360,36 +359,11 @@ namespace TokenStats
                 DrawText(g,(weeklyPrimary ? L.T("5 часов  ","5 hours  ") : L.T("Неделя  ","Week  ")) + (secondary.HasValue ? Math.Floor(secondary.Value) + "%" : "—"), smallFont, muted, 16, 120);
             }
         }
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (keyData == Keys.Escape) { if (expanded) SetExpanded(false); else SetEnabled(false); return true; }
-            if (keyData == Keys.Tab || keyData == (Keys.Shift | Keys.Tab)) {
-                keyboardFocus = true;
-                if (!expanded) focusAction = 1;
-                else if (keyData == Keys.Tab) focusAction = focusAction == 1 ? 3 : focusAction == 3 ? 4 : 1;
-                else focusAction = focusAction == 1 ? 4 : focusAction == 4 ? 3 : 1;
-                Invalidate(); return true;
-            }
-            if (keyData == Keys.Enter || keyData == Keys.Space) {
-                if (!keyboardFocus || focusAction == 1) SetExpanded(!expanded);
-                else if (focusAction == 3 && RefreshRequested != null) RefreshRequested();
-                else if (focusAction == 4 && LoginRequested != null) LoginRequested();
-                return true;
-            }
-            if (keyData == Keys.F5) { if (RefreshRequested != null) RefreshRequested(); return true; }
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
         protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); hoverAction = 0; Invalidate(); }
         Color ActionFill(int action) { return pressedAction == action && Capture && !moved ? WidgetTheme.Border : hoverAction == action ? WidgetTheme.Track : WidgetTheme.Control; }
-        void DrawFocus(Graphics g, RectangleF bounds, int action)
-        {
-            if (!keyboardFocus || focusAction != action) return;
-            using(var pen = new Pen(WidgetTheme.Accent,1.5f))
-            using(var path = Rounded(new RectangleF(bounds.X-2,bounds.Y-2,bounds.Width+4,bounds.Height+4),ControlRadius+2)) g.DrawPath(pen,path);
-        }
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            base.OnMouseDown(e); keyboardFocus = false; Invalidate();
+            base.OnMouseDown(e); Invalidate();
             if (e.Button != MouseButtons.Left) return;
             pressedAction = HitAction(e.Location);
             dragging = true; moved = false; dragStart = MousePosition; windowStart = Location; Capture = true;

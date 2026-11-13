@@ -88,7 +88,7 @@ namespace TokenStats
             using(var shape = Rounded(bounds,ControlRadius))
             using(var pen = new Pen(WidgetTheme.Accent,1.6f))
             {
-                g.FillPath(fill,shape); DrawFocus(g,bounds,1);
+                g.FillPath(fill,shape);
                 float x=bounds.X+bounds.Width/2, y=bounds.Y+bounds.Height/2;
                 if(!collapse) {
                     g.DrawLines(pen,new[]{new PointF(x-6,y-1),new PointF(x-6,y-6),new PointF(x-1,y-6)});
@@ -108,7 +108,7 @@ namespace TokenStats
             using (var font = AppFonts.Create( 11, FontStyle.Regular, GraphicsUnit.Pixel))
             using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
             { g.FillPath(fill, path);
-                DrawText(g,text, font, WidgetTheme.TextBrush, bounds, format); DrawFocus(g,bounds,action); }
+                DrawText(g,text, font, WidgetTheme.TextBrush, bounds, format); }
         }
 
         static void DrawCard(Graphics g, float top, string title, double? value, Quota quota)
