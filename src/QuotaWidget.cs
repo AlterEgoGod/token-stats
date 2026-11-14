@@ -17,6 +17,9 @@ namespace TokenStats
         bool enabled, alwaysVisible, pinned = true, dragging, moved;
         Point dragStart, windowStart;
         Point? savedLocation;
+        Rectangle preferredArea;
+        Size preferredSize;
+        string preferredMonitor;
         double? remaining, secondary;
         bool weeklyPrimary;
         string resetText = L.T("Ожидание данных","Waiting for data");
@@ -75,8 +78,9 @@ namespace TokenStats
             catch (Exception e) { if (!(e is IOException || e is UnauthorizedAccessException || e is System.Security.SecurityException || e is FormatException || e is OverflowException)) throw; }
         }
 
-        void SaveSettings()
+        void SaveSettings(bool savePosition = false)
         {
+            if (savePosition) RememberPosition();
             if (!persist) return;
             try
             {
@@ -86,7 +90,7 @@ namespace TokenStats
                     key.SetValue("AlwaysVisible", alwaysVisible ? 1 : 0);
                     key.SetValue("Pinned", pinned ? 1 : 0);
 
-                    Point position = expanded ? new Point(compactLocation.X + Left - expandedOrigin.X, compactLocation.Y + Top - expandedOrigin.Y) : Location;
+                    Point position = savedLocation ?? Location;
                     key.SetValue("X", position.X); key.SetValue("Y", position.Y);
                 }
             }
@@ -110,13 +114,14 @@ namespace TokenStats
             else MoveToTray(false);
             ApplySize();
             if (snapEnabled) SnapToEdge();
+            RememberPosition();
         }
 
         public void MoveToTray(bool save)
         {
             var area = Screen.PrimaryScreen.WorkingArea;
             Location = Fit(new Point(area.Right - Width - 16, area.Bottom - Height - 16), Size, area);
-            if (save) SaveSettings();
+            if (save) SaveSettings(true);
         }
 
         public void SetEnabled(bool value)
@@ -157,7 +162,7 @@ namespace TokenStats
             else if (bottom <= threshold) location.Y = area.Bottom - size.Height;
             return location;
         }
-        public void SetSnapEnabled(bool value) { snapEnabled = value; if(value) SnapToEdge(); SaveSettings(); }
+        public void SetSnapEnabled(bool value) { snapEnabled = value; if(value) SnapToEdge(); SaveSettings(true); }
         void SnapToEdge() { Location = Snap(Location, Size, Screen.FromRectangle(Bounds).WorkingArea); }
         public void SetPinned(bool value) { pinned = value; TopMost = value; SaveSettings(); }
         public static float AutomaticScale(Size monitor)
@@ -172,9 +177,36 @@ namespace TokenStats
             ClientSize = new Size((int)Math.Round((expanded ? 400 : 220) * scale), (int)Math.Round((expanded ? 510 : 144) * scale));
         }
         void KeepOnScreen() { Location = Fit(Location, Size, Screen.FromRectangle(Bounds).WorkingArea); }
+        void RememberPosition()
+        {
+            savedLocation = expanded ? new Point(compactLocation.X + Left - expandedOrigin.X, compactLocation.Y + Top - expandedOrigin.Y) : Location;
+            var monitor = Screen.FromPoint(savedLocation.Value);
+            preferredMonitor = monitor.DeviceName;
+            preferredArea = monitor.WorkingArea;
+            float scale = AutomaticScale(monitor.Bounds.Size);
+            preferredSize = new Size((int)Math.Round(220 * scale), (int)Math.Round(144 * scale));
+        }
+
+        internal static Point RestorePosition(Point position, Size oldSize, Rectangle oldArea, Size size, Rectangle area)
+        {
+            int x = position.X - oldArea.Left, y = position.Y - oldArea.Top;
+            int right = oldArea.Right - position.X - oldSize.Width;
+            int bottom = oldArea.Bottom - position.Y - oldSize.Height;
+            return Fit(new Point(x <= right ? area.Left + x : area.Right - size.Width - right,
+                y <= bottom ? area.Top + y : area.Bottom - size.Height - bottom), size, area);
+        }
+
         void DisplayChanged(object sender, EventArgs e)
         {
-            if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(() => { if (!IsDisposed) { ApplySize(); KeepOnScreen(); SaveSettings(); } }));
+            if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(() => {
+                if (IsDisposed || !savedLocation.HasValue) return;
+                var monitor = Screen.FromPoint(savedLocation.Value);
+                foreach (var candidate in Screen.AllScreens)
+                    if (candidate.DeviceName == preferredMonitor) { monitor = candidate; break; }
+                SetExpanded(false);
+                ApplySize(monitor);
+                Location = RestorePosition(savedLocation.Value, preferredSize, preferredArea, Size, monitor.WorkingArea);
+            }));
         }
 
         public void UpdateQuota(Quota fiveHourQuota, Quota weeklyQuota, string error, DateTimeOffset? updated = null, bool preferWeekly = false)
@@ -390,7 +422,7 @@ namespace TokenStats
             base.OnMouseUp(e);
             if (e.Button != MouseButtons.Left || !dragging) return;
             bool wasMoved = moved; dragging = false; Capture = false;
-            if (wasMoved) { if (snapEnabled) SnapToEdge(); SaveSettings(); }
+            if (wasMoved) { if (snapEnabled) SnapToEdge(); SaveSettings(true); }
             else if (pressedAction != 0 && pressedAction == HitAction(e.Location))
             {
                 if (pressedAction == 1) SetExpanded(!expanded);

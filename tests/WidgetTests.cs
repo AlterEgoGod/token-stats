@@ -24,6 +24,13 @@ namespace TokenStats
             Check(QuotaWidget.Fit(new Point(1900, 1100), size, new Rectangle(0, 0, 1920, 1040)) == new Point(1700, 896), "stay above taskbar");
             Check(QuotaWidget.Fit(new Point(-5000, -200), size, new Rectangle(-1920, 0, 1920, 1040)) == new Point(-1920, 0), "negative monitor coordinates");
             Check(QuotaWidget.Fit(new Point(5000, 5000), size, new Rectangle(0, 0, 1280, 720)) == new Point(1060, 576), "recover offscreen position");
+            var desktop = new Rectangle(0, 0, 1920, 1040);
+            var reduced = new Rectangle(0, 0, 1280, 680);
+            var small = new Size(180, 118);
+            var corner = new Point(1684, 880);
+            Check(QuotaWidget.RestorePosition(corner, size, desktop, small, reduced) == new Point(1084, 546), "preserve right and bottom margins after resolution change");
+            Check(QuotaWidget.RestorePosition(corner, size, desktop, size, desktop) == corner, "restore original position after temporary resolution change");
+            Check(QuotaWidget.RestorePosition(new Point(-1904, 16), size, new Rectangle(-1920, 0, 1920, 1040), small, reduced) == new Point(16, 16), "recover disconnected monitor with left and top margins");
             using (var widget = new QuotaWidget(false))
             {
                 Check(!widget.Visible && !widget.WidgetEnabled, "start hidden");
